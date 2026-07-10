@@ -1694,11 +1694,61 @@ function checkLoginExpiry(){
 document.getElementById("otp").addEventListener("keydown",e=>{
     if(e.key==="Enter") verifyOTP();
 });
+
+function checkGatewayAccess(){
+
+  const fromGateway = sessionStorage.getItem("fromGateway");
+
+  if(fromGateway === "YES"){
+    return true;
+  }
+
+  return false;
+}
   
 
 window.addEventListener("DOMContentLoaded", async function(){
 
-  checkLoginExpiry();
+
+if(!checkGatewayAccess()){
+
+document.body.innerHTML = `
+
+<div style="
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+font-family:Arial;
+background:#eef2f7;
+">
+
+<div style="
+background:white;
+padding:30px;
+border-radius:20px;
+text-align:center;
+box-shadow:0 10px 30px rgba(0,0,0,.2);
+">
+
+<h2>🔒 ACCESS DENIED</h2>
+
+<p>
+Please open the system from the main website.
+</p>
+
+</div>
+
+</div>
+
+`;
+
+return;
+
+}
+
+
+checkLoginExpiry();
 
   const email = localStorage.getItem("inventoryEmail");
   const sessionId = localStorage.getItem("sessionId");
