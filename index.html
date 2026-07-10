@@ -599,31 +599,7 @@ margin-top:10px;
 
 <body>
 
-<div id="branchScreen" style="
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-display:flex;
-justify-content:center;
-align-items:center;
-flex-direction:column;
-background:#eef2f7;
-z-index:10000;
-">
 
-<h2>Select Branch</h2>
-
-<button onclick="location.href='https://acbd-gai.github.io/sold-out/'">
-GAISANO ILOILO BRANCH
-</button>
-
-<button onclick="location.href='https://acbd-gai.github.io/SOLD-BAC/'">
-BACOLOD BRANCH
-</button>
-
-</div>
   
 
 <div id="loginScreen" style="
@@ -1731,9 +1707,8 @@ window.addEventListener("DOMContentLoaded", async function(){
   // NO SAVED LOGIN
   if(!email || !sessionId){
 
-   document.getElementById("branchScreen").style.display="flex";
-document.getElementById("loginScreen").style.display="none";
-document.getElementById("app").style.display="none";
+    document.getElementById("loginScreen").style.display="flex";
+    document.getElementById("app").style.display="none";
 
     return;
   }
