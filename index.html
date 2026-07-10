@@ -1776,6 +1776,18 @@ document.getElementById("otp").addEventListener("keydown",e=>{
 
 window.addEventListener("DOMContentLoaded", async function(){
 
+  const branch =
+localStorage.getItem("selectedBranch");
+
+
+if(branch && window.location.href !== branch){
+
+window.location.href = branch;
+
+return;
+
+}
+
   checkLoginExpiry();
 
   const email = localStorage.getItem("inventoryEmail");
@@ -1984,6 +1996,32 @@ async function sendSelectedReport() {
   </div>
 
   `;
+
+}
+
+  function openBranch(){
+
+const branch =
+document.getElementById("branchSelect").value;
+
+
+if(!branch){
+
+alert("Please select branch");
+
+return;
+
+}
+
+
+localStorage.setItem(
+"selectedBranch",
+branch
+);
+
+
+window.location.href = branch;
+
 
 }
 
