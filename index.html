@@ -1660,6 +1660,11 @@ async function toggleAuditScan() {
 
 
         if(!auditScanning) return;
+        if(decodedText === lastAuditBarcode){
+    return;
+}
+
+lastAuditBarcode = decodedText;
 
 
         if(auditBusy) return;
@@ -1703,47 +1708,17 @@ async function toggleAuditScan() {
           }
 
 
-          else if(data.status==="ALREADY_AUDITED"){
+       else if(data.status==="ALREADY_AUDITED"){
+
+    // Ignore duplicate
+}
 
 
-            document.getElementById("result").innerHTML=`
+else{
 
-            <div class="card red">
+    // Ignore not found
 
-            🛑 ALREADY AUDITED
-
-            <br><br>
-
-            ${decodedText}
-
-            </div>
-
-            `;
-
-
-          }
-
-
-          else {
-
-
-            document.getElementById("result").innerHTML=`
-
-            <div class="no-results">
-
-            ❌ ITEM NOT FOUND
-
-            <br><br>
-
-            ${decodedText}
-
-            </div>
-
-            `;
-
-
-          }
-
+}
 
 
         }
@@ -1751,11 +1726,10 @@ async function toggleAuditScan() {
         finally{
 
 
-          setTimeout(()=>{
-
-            auditBusy=false;
-
-          },500);
+         setTimeout(()=>{
+    auditBusy = false;
+    lastAuditBarcode = "";
+},200);
 
 
         }
@@ -1899,29 +1873,12 @@ if(data.status==="RECORDED"){
 auditCount++;
 
 
-document.getElementById("auditCounter").innerHTML =
+document.getElementById("auditCounter").textContent =
 "Scanned : " + auditCount;
 
 
 
-document.getElementById("result").innerHTML=`
-<div class="card green scan-animate">
 
-✅ AUDIT RECORDED
-
-<br><br>
-
-<b>${data.colO}</b><br>
-
-${data.colJ}
-
-<br><br>
-
-${barcode}
-
-</div>
-
-`;
 
 }
 
