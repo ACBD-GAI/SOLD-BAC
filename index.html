@@ -774,14 +774,6 @@ style="display:none;">
 📤 UPDATE STOCKS
 </button>
 
-     <button
-id="clearAuditBtn"
-class="btn-orange"
-onclick="clearAuditSheet()"
-style="display:none;">
-🧹 CLEAR AUDIT
-</button>
-
 <input
 type="file"
 id="stockFile"
@@ -984,7 +976,7 @@ const STOCK_ADMIN = [
 ];
 
 
-const API_URL = "https://script.google.com/macros/s/AKfycbxatOPtlkBKkEk9fWH94o-yLFJOMepHMN3hZGxxeZna3gAiSXTK1yQhnrTDpC5Sx2YA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycby9Thgs2i1U21BobEqoIdBI3Gdqav8DQsQ3Fr8kytP0bGvBrAA74yFOhW5c7YeIc2Vw/exec";
 
 function getSessionParams(){
 
@@ -1011,8 +1003,6 @@ function checkReportAccess(){
 
   const reportBtn = document.getElementById("reportBtn");
   const updateBtn = document.getElementById("updateStockBtn");
-  const clearAuditBtn = document.getElementById("clearAuditBtn");
-
 
   const REPORT_USERS = [
     "remnvill@gmail.com",
@@ -1022,45 +1012,27 @@ function checkReportAccess(){
     "mmlorijo1990@gmail.com"
   ];
 
-
-  const AUDIT_ADMINS = [
-    "remnvill@gmail.com",
-    "fmfc_audit654@yahoo.com"
-  ];
-
-
-
   if(reportBtn){
-
     reportBtn.style.display =
-      REPORT_USERS.includes(email)
-      ? "block"
-      : "none";
-
+      REPORT_USERS.includes(email) ? "block" : "none";
   }
-
-
 
   if(updateBtn){
-
     updateBtn.style.display =
-      STOCK_ADMIN.includes(email)
-      ? "block"
-      : "none";
-
+      STOCK_ADMIN.includes(email) ? "block" : "none";
   }
 
+}
 
+function checkStockAccess(){
 
-  if(clearAuditBtn){
+  const session = JSON.parse(
+    localStorage.getItem("inventorySession_" + BRANCH) || "{}"
+  );
 
-    clearAuditBtn.style.display =
-      AUDIT_ADMINS.includes(email)
-      ? "block"
-      : "none";
+  const email = (session.email || "").trim().toLowerCase();
 
-  }
-
+  return STOCK_ADMIN.includes(email);
 
 }
   
@@ -2760,100 +2732,6 @@ const res = await fetch(
   `;
 
 }
-async function clearAuditSheet(){
-
-
-const confirmClear = confirm(
-"⚠ CLEAR AUDIT SHEET?\n\nAll audit records will be deleted."
-);
-
-
-if(!confirmClear){
-
-return;
-
-}
-
-
-
-const session =
-JSON.parse(
-localStorage.getItem("inventorySession_"+BRANCH)
-|| "{}"
-);
-
-
-
-document.getElementById("result").innerHTML = `
-
-<div class="card saving">
-
-<div class="spinner"></div>
-
-Clearing audit data...
-
-</div>
-
-`;
-
-
-
-const res = await fetch(
-
-API_URL+
-"?action=clearAudit"+
-"&email="+encodeURIComponent(session.email || "")+
-"&sessionId="+encodeURIComponent(session.sessionId || "")
-
-);
-
-
-
-const data = await res.json();
-
-
-
-if(data.status==="OK"){
-
-
-document.getElementById("result").innerHTML = `
-
-<div class="card green scan-animate">
-
-✅ AUDIT CLEARED
-
-<br><br>
-
-Deleted Rows:
-
-<b>${data.rows}</b>
-
-</div>
-
-`;
-
-
-}
-else{
-
-
-document.getElementById("result").innerHTML = `
-
-<div class="card red">
-
-❌ ${data.status}
-
-</div>
-
-`;
-
-
-}
-
-
-
-}
-  
 
  async function uploadStockFile(file){
 
@@ -3095,102 +2973,6 @@ console.log("UPLOAD RESPONSE:", data);
 
 
     reader.readAsDataURL(file);
-
-
-}
-
-  function clearAudit(e){
-
-
-const email =
-(e.parameter.email || "")
-.trim()
-.toLowerCase();
-
-
-
-const ADMINS = [
-  "remnvill@gmail.com",
-  "fmfc_audit654@yahoo.com"
-];
-
-
-
-if(!ADMINS.includes(email)){
-
-
-return jsonResponse({
-
-status:"NO ACCESS"
-
-});
-
-
-}
-
-
-
-const ss =
-SpreadsheetApp.openById(SPREADSHEET_ID);
-
-
-
-const sheet =
-ss.getSheetByName("AUDIT");
-
-
-
-if(!sheet){
-
-
-return jsonResponse({
-
-status:"AUDIT SHEET NOT FOUND"
-
-});
-
-
-}
-
-
-
-const lastRow =
-sheet.getLastRow();
-
-
-
-let rowsDeleted = 0;
-
-
-
-if(lastRow > 1){
-
-
-rowsDeleted = lastRow - 1;
-
-
-
-sheet
-.getRange(
-2,     // row start
-1,     // column A
-rowsDeleted,
-22     // A to V = 22 columns
-)
-.clearContent();
-
-
-
-}
-
-
-
-return jsonResponse({
-
-status:"OK",
-rows:rowsDeleted
-
-});
 
 
 }
