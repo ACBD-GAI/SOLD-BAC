@@ -79,11 +79,17 @@ body {
 /* INPUT */
 input {
   padding: 14px;
-  width: 100%;
+  width: 50%;
+  display: block;
+  margin: 12px auto 0 auto;
+
   font-size: 16px;
+  text-align: center;
+
   border-radius: 12px;
   border: none;
-  margin-top: 12px;
+
+  box-sizing: border-box;
 }
 
 /* BUTTONS */
@@ -410,18 +416,22 @@ opacity:1;
 
 .report-modal{
 
-width:360px;
-max-width:92%;
+width:320px;
+max-width:90%;
+
+max-height:85vh;
+overflow-y:auto;
 
 background:#fff;
 
-border-radius:22px;
+border-radius:18px;
 
-padding:25px;
+padding:18px;
 
 box-shadow:0 20px 45px rgba(0,0,0,.25);
 
 animation:popReport .25s;
+
 }
 
 @keyframes popReport{
@@ -444,7 +454,7 @@ opacity:1;
 
 .report-title{
 
-font-size:24px;
+font-size:20px;
 font-weight:bold;
 color:#1976d2;
 
@@ -467,13 +477,13 @@ color:#777;
 display:flex;
 align-items:center;
 
-padding:16px;
+padding:10px 12px;
 
-margin-bottom:14px;
+margin-bottom:8px;
 
-border:2px solid #e5e5e5;
+border:1.5px solid #e5e5e5;
 
-border-radius:18px;
+border-radius:14px;
 
 cursor:pointer;
 
@@ -483,28 +493,11 @@ position:relative;
 
 }
 
-.recipient-card:hover{
-
-transform:translateY(-3px);
-
-box-shadow:0 10px 25px rgba(0,0,0,.12);
-
-}
-
-.recipient-card.selected{
-
-border-color:#2196f3;
-
-background:#eaf4ff;
-
-box-shadow:0 0 20px rgba(33,150,243,.25);
-
-}
 
 .recipient-icon{
 
-width:52px;
-height:52px;
+width:38px;
+height:38px;
 
 border-radius:50%;
 
@@ -514,31 +507,52 @@ display:flex;
 align-items:center;
 justify-content:center;
 
-font-size:24px;
+font-size:18px;
 
 color:#fff;
 
-margin-right:15px;
+margin-right:10px;
+
+flex-shrink:0;
 
 }
+
 
 .recipient-name{
 
 font-weight:bold;
-font-size:16px;
+font-size:14px;
 
 }
+
 
 .recipient-email{
 
-font-size:13px;
+font-size:11px;
+
 color:#777;
 
-margin-top:3px;
+margin-top:2px;
 
 }
 
+
 .checkmark{
+
+margin-left:auto;
+
+font-size:18px;
+
+color:#2196f3;
+
+opacity:0;
+
+transform:scale(.5);
+
+transition:.25s;
+
+}
+  .checkmark{
 
 margin-left:auto;
 
@@ -592,6 +606,32 @@ margin-top:10px;
     );
 
     backdrop-filter: blur(10px);
+}
+
+  .button-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.button-grid button{
+  width:100%;
+}
+
+  .si-input {
+  width:50%;
+  display:block;
+  margin:12px auto 0 auto;
+
+  text-align:center;
+  padding:14px;
+
+  font-size:16px;
+
+  border-radius:12px;
+  border:none;
+
+  box-sizing:border-box;
 }
   
 </style>
@@ -657,13 +697,51 @@ VERIFY OTP
     <button class="logout-btn" onclick="logout()">Logout</button>
 
 </div>
-  <div class="container">
+ <div class="container">
 
+    <!-- RESULT AREA -->
+    <div id="result"></div>
+
+    
+
+    <!-- QR SCANNER -->
     <div id="reader" style="display:none;"></div>
 
-    <input id="siNo" placeholder="Enter SI No">
+    <!-- AUDIT SCANNER -->
+    <div id="auditReader"
+    style="
+    display:none;
+    width:100%;
+    max-width:360px;
+    margin:auto;
+    border-radius:15px;
+    overflow:hidden;
+    ">
+    </div>
+   <div id="auditCounter"
+style="
+text-align:center;
+font-weight:bold;
+margin:10px;
+font-size:16px;
+">
+Scanned : 0
+</div>
 
-    <button id="scanBtn" class="btn-blue" onclick="toggleScan()">📷 START SCAN</button>
+    <input id="siNo" class="si-input" placeholder="Enter SI No">
+
+   <div class="button-grid">
+
+<button id="scanBtn" class="btn-blue" onclick="toggleScan()">
+📷 START SCAN
+</button>
+
+<button
+id="auditScanBtn"
+class="btn-orange"
+onclick="toggleAuditScan()">
+🔄 RE-INVENTORY
+</button>
 
 <button 
 id="tagBtn"
@@ -673,9 +751,14 @@ disabled>
 🏷 ADD VIA TAG NUMBER
 </button>
 
-<button class="btn-blue" onclick="searchSI()">🔍 SEARCH SI</button>
+<button class="btn-blue" onclick="searchSI()">
+🔍 SEARCH SI
+</button>
 
-<button class="btn-orange" onclick="refreshPage()">♻ REFRESH</button>
+<button class="btn-orange" onclick="refreshPage()">
+♻ REFRESH
+</button>
+
 <button
 id="reportBtn"
 class="btn-blue"
@@ -683,9 +766,36 @@ onclick="showReportDialog()"
 style="display:none;">
 📧 SEND REPORT
 </button>
+     <button
+id="updateStockBtn"
+class="btn-orange"
+onclick="document.getElementById('stockFile').click()"
+style="display:none;">
+📤 UPDATE STOCKS
+</button>
 
-    <p id="result"></p>
-    <div id="searchResult"></div>
+     <button
+id="clearAuditBtn"
+class="btn-orange"
+onclick="clearAuditSheet()"
+style="display:none;">
+🧹 CLEAR AUDIT
+</button>
+
+<input
+type="file"
+id="stockFile"
+accept=".xlsx,.xls"
+style="display:none"
+onchange="uploadStockFile(this.files[0])">
+
+</div>
+
+
+
+   <div id="searchResult"></div>
+
+   
 
   </div>
 <div id="reportDialog" class="report-overlay">
@@ -696,9 +806,29 @@ style="display:none;">
             📧 Send Inventory Report
         </div>
 
-        <div class="report-subtitle">
-            Choose recipient(s)
-        </div>
+     <select id="reportType" 
+style="
+width:100%;
+padding:14px;
+border-radius:12px;
+border:1px solid #ddd;
+font-size:16px;
+font-weight:bold;
+margin-bottom:20px;
+">
+
+<option value="sales">
+📊 Sales Report
+</option>
+
+<option value="reinventory">
+📦 Re-Inventory Report
+</option>
+
+</select>
+<div class="report-subtitle">
+    Choose recipient(s)
+</div>
 
         <div class="recipient-card" data-email="remnvill@gmail.com">
             <div class="recipient-icon">👤</div>
@@ -778,21 +908,7 @@ style="display:none;">
 
             <div class="checkmark">✓</div>
             </div>
-         <div class="recipient-card" data-email="fmfc_philippines@yahoo.com">
-            <div class="recipient-icon">👤</div>
-
-            <div class="recipient-info">
-                <div class="recipient-name">
-                    Ma'am Dinah
-                </div>
-
-                <div class="recipient-email">
-                   fmfc_philippines@yahoo.com
-                </div>
-            </div>
-
-            <div class="checkmark">✓</div>
-        </div>
+       
 
         <button class="send-report-btn" onclick="sendSelectedReport()">
             📧 SEND REPORT
@@ -850,62 +966,104 @@ CANCEL
 
   
 <script>
+  let auditBusy = false;
 
+
+  const BRANCH="BAC";
+  let auditMode = false;
 let scanner = null;
 let isScanning = false;
 let isSaving = false;
+
+let lastAuditBarcode = "";
 let tempCode = "";
 let tempSi = "";
+const STOCK_ADMIN = [
+  "remnvill@gmail.com",
+  "fmfc_audit654@yahoo.com"
+];
 
-const API_URL = "https://script.google.com/macros/s/AKfycbyPw6LN30Qu2Gfp5kY0Qwic_wnFl69L3XsnRUkTdAJIFI2jHvcuMkQXxDtia92VRq1QsA/exec";
 
- function getSessionParams(){
+const API_URL = "https://script.google.com/macros/s/AKfycbz_yXmIDkvK_czQ1kOabJErgKQFHJYu3EjsLFy6BYY14yRcmR8jOEU18HdW6h60RoebOw/exec";
 
-  const email = localStorage.getItem("inventoryEmail") || "";
-  const sessionId = localStorage.getItem("sessionId") || "";
+function getSessionParams(){
 
-  return (
-    "&email=" + encodeURIComponent(email) +
-    "&sessionId=" + encodeURIComponent(sessionId)
-  );
+const session =
+JSON.parse(
+localStorage.getItem("inventorySession_"+BRANCH)
+|| "{}"
+);
+
+
+return (
+"&email=" + encodeURIComponent(session.email || "") +
+"&sessionId=" + encodeURIComponent(session.sessionId || "")
+);
 
 }
 function checkReportAccess(){
 
-  const email = localStorage
-    .getItem("inventoryEmail")
-    ?.toLowerCase();
+  const session = JSON.parse(
+    localStorage.getItem("inventorySession_" + BRANCH) || "{}"
+  );
 
+  const email = (session.email || "").trim().toLowerCase();
 
-  const reportBtn =
-    document.getElementById("reportBtn");
-
-
-  if(!reportBtn) return;
+  const reportBtn = document.getElementById("reportBtn");
+  const updateBtn = document.getElementById("updateStockBtn");
+  const clearAuditBtn = document.getElementById("clearAuditBtn");
 
 
   const REPORT_USERS = [
     "remnvill@gmail.com",
     "willremn@gmail.com",
     "fmfc_audit654@yahoo.com",
-  "fmfc_ho2016@yahoo.com",
-    "fmfc_philippines@yahoo.com",
+    "fmfc_ho2016@yahoo.com",
     "mmlorijo1990@gmail.com"
   ];
 
 
-  if(REPORT_USERS.includes(email)){
+  const AUDIT_ADMINS = [
+    "remnvill@gmail.com",
+    "fmfc_audit654@yahoo.com"
+  ];
 
-    reportBtn.style.display = "block";
+
+
+  if(reportBtn){
+
+    reportBtn.style.display =
+      REPORT_USERS.includes(email)
+      ? "block"
+      : "none";
 
   }
-  else{
 
-    reportBtn.style.display = "none";
+
+
+  if(updateBtn){
+
+    updateBtn.style.display =
+      STOCK_ADMIN.includes(email)
+      ? "block"
+      : "none";
 
   }
+
+
+
+  if(clearAuditBtn){
+
+    clearAuditBtn.style.display =
+      AUDIT_ADMINS.includes(email)
+      ? "block"
+      : "none";
+
+  }
+
 
 }
+  
   
 
 /* ================= LOGIN ================= */
@@ -1026,11 +1184,17 @@ const data=await res.json();
 if (data.status === "OK") {
 
   localStorage.setItem("inventoryLoggedIn", "true");
-  localStorage.setItem("inventoryEmail", email);
+  localStorage.setItem(
+"inventorySession_"+BRANCH,
+JSON.stringify({
+email: email,
+sessionId: data.sessionId,
+time: Date.now()
+})
+);
   localStorage.setItem("loginTime", Date.now());
 
-  // Save the session ID returned by Apps Script
-  localStorage.setItem("sessionId", data.sessionId);
+
 
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("app").style.display = "block";
@@ -1095,9 +1259,18 @@ else {
   if (data.status === "OK") {
 
     localStorage.setItem("inventoryLoggedIn", "true");
-    localStorage.setItem("inventoryEmail", email);
+localStorage.setItem(
+"inventorySession_"+BRANCH,
+JSON.stringify({
+email: email,
+sessionId: data.sessionId,
+time: Date.now()
+})
+);
+    
     localStorage.setItem("loginTime", Date.now());
-    localStorage.setItem("sessionId", data.sessionId);
+    
+    
 
     document.getElementById("loginScreen").style.display = "none";
     document.getElementById("app").style.display = "block";
@@ -1111,6 +1284,8 @@ else {
 
 }
 
+
+  
   
 
 
@@ -1176,76 +1351,615 @@ for (let d of devices) {
   }
 }
 
-  scanner = new Html5Qrcode("reader");
+ scanner = new Html5Qrcode("reader");
 
-  await scanner.start(
-    cameraId,
-    { fps: 10, qrbox: 250 },
+await scanner.start(
+    {
+        deviceId: { exact: cameraId }
+    },
+    {
+        fps: 20,
+        qrbox: {
+            width: 300,
+            height: 300
+        },
+        aspectRatio: 1.0,
+        videoConstraints: {
+            facingMode: "environment",
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+        }
+    },
     async (code) => {
 
-      if (!isScanning) return;
+        if (!isScanning) return;
 
-      isScanning = false;
+        isScanning = false;
+        await scanner.stop();
+        await scanner.clear();
+        scanner = null;
+        setUIScanning(false);
+
+        beep();
+        vibrate();
+
+        tempCode = code;
+        tempSi = siNo;
+
+        const res = await fetch(
+            API_URL +
+            "?action=check" +
+            "&barcode=" + encodeURIComponent(code) +
+            getSessionParams()
+        );
+
+        const data = await res.json();
+
+        let row = data.row || [];
+        let colJ = data.colJ || row?.[9] || "";
+        let colO = data.colO || row?.[14] || "";
+
+        if (data.status === "FOUND") {
+            document.getElementById("result").innerHTML = `
+                <div class="card green scan-animate">
+                    ✅ AVAILABLE<br><br>
+                    <b>${colO}</b><br>
+                    ${colJ ? `<small>${colJ}</small><br>` : ""}
+                    <b>${code}</b><br><br>
+
+                    <button id="saveBtn"
+                        class="btn-blue"
+                        onclick="saveYes()">
+                        ADD TO SOLD
+                    </button>
+
+                    <button class="btn-orange"
+                        onclick="cancelNo()">
+                        CANCEL
+                    </button>
+                </div>
+            `;
+        }
+        else if (data.status === "DUPLICATE") {
+            document.getElementById("result").innerHTML = `
+                <div class="card red">
+                    🛑 ALREADY SOLD<br><br>
+                    <b>${colO}</b><br>
+                    ${colJ ? `<small>${colJ}</small><br>` : ""}
+                    <b>${code}</b>
+                </div>
+            `;
+        }
+        else {
+            document.getElementById("result").innerHTML = `
+                <div class="no-results">
+                    ❌ NOT FOUND
+                </div><br>
+                <b>${colO}</b><br>
+                ${colJ ? `<small>${colJ}</small>` : ""}
+            `;
+        }
+    }
+);
+
+// ================= CAMERA IMPROVEMENTS =================
+
+try {
+
+    const video = document.querySelector("#reader video");
+
+    if (video && video.srcObject) {
+
+        const track = video.srcObject.getVideoTracks()[0];
+
+        if (track) {
+
+            const capabilities = track.getCapabilities();
+
+            // Continuous autofocus
+            if (
+                capabilities.focusMode &&
+                capabilities.focusMode.includes("continuous")
+            ) {
+                await track.applyConstraints({
+                    advanced: [{
+                        focusMode: "continuous"
+                    }]
+                });
+
+                console.log("Continuous autofocus enabled");
+            }
+
+            // Auto zoom if supported
+       if (capabilities.zoom) {
+
+    const desiredZoom = 2.0;  
+
+    await track.applyConstraints({
+        advanced: [{
+            zoom: desiredZoom
+        }]
+    });
+
+                console.log("Camera zoom enabled");
+            }
+
+        }
+
+    }
+
+}
+catch (e) {
+
+    console.log("Camera features not supported:", e);
+
+}
+}
+
+  async function stopNormalScanner(){
+
+  if(scanner){
+
+    try{
       await scanner.stop();
       await scanner.clear();
-      scanner = null;
-      setUIScanning(false);
-
-      beep();
-      vibrate();
-
-      tempCode = code;
-      tempSi = siNo;
-
-      const res = await fetch(
-  API_URL +
-  "?action=check" +
-  "&barcode=" + encodeURIComponent(code) +
-  getSessionParams()
-);
-      const data = await res.json();
-
-      let row = data.row || [];
-      let colJ = data.colJ || row?.[9] || "";
-      let colO = data.colO || row?.[14] || "";
-
-      if (data.status === "FOUND") {
-        document.getElementById("result").innerHTML = `
-          <div class="card green scan-animate">
-            ✅ AVAILABLE<br><br>
-            <b>${colO}</b><br>
-            ${colJ ? `<small>${colJ}</small><br>` : ""}
-            <b>${code}</b><br>
-            <br>
-            <button id="saveBtn" class="btn-blue" onclick="saveYes()">ADD TO SOLD</button>
-            <button class="btn-orange" onclick="cancelNo()">CANCEL</button>
-          </div>
-        `;
-      }
-
-     else if (data.status === "DUPLICATE") {
-  document.getElementById("result").innerHTML = `
-    <div class="card red">
-      🛑 ALREADY SOLD<br><br>
-      <b>${colO}</b><br>
-      ${colJ ? `<small>${colJ}</small><br>` : ""}
-      <b>${code}</b>
-    </div>
-  `;
-}
-
-      else {
-        document.getElementById("result").innerHTML = `
-          <div class="no-results">
-            ❌ NOT FOUND </div><br>
-            <b>${colO}</b><br>
-            ${colJ ? `<small>${colJ}</small>` : ""}
-         
-        `;
-      }
     }
-  );
+    catch(e){
+      console.log("Normal scanner stop:", e);
+    }
+
+    scanner=null;
+  }
+
+  isScanning=false;
+
+  setUIScanning(false);
+
 }
+
+  let auditScanner = null;
+let auditScanning = false;
+
+
+  
+
+async function toggleAuditScan() {
+
+  const btn = document.getElementById("auditScanBtn");
+  const scanBtn = document.getElementById("scanBtn");
+
+
+  // STOP NORMAL SCANNER FIRST
+  await stopNormalScanner();
+
+
+
+  // ================= STOP AUDIT =================
+
+  if (auditScanning) {
+
+    auditScanning = false;
+
+    btn.innerHTML = "🔄 RE-INVENTORY";
+
+
+    scanBtn.disabled = false;
+    scanBtn.style.opacity = "1";
+    scanBtn.style.cursor = "pointer";
+
+
+    if (auditScanner) {
+
+      try {
+
+        await auditScanner.stop();
+        await auditScanner.clear();
+
+      } catch(e){
+
+        console.log(e);
+
+      }
+
+
+      auditScanner = null;
+
+    }
+
+
+    document.getElementById("auditReader").style.display="none";
+
+
+    return;
+
+  }
+
+
+
+  // ================= START AUDIT =================
+
+
+  auditScanning = true;
+
+  auditCount = 0;
+
+  document.getElementById("auditCounter").innerHTML =
+  "Scanned : 0";
+
+
+  btn.innerHTML = "⏹ STOP AUDIT";
+
+
+  scanBtn.disabled = true;
+  scanBtn.style.opacity = "0.5";
+  scanBtn.style.cursor = "not-allowed";
+
+
+  document.getElementById("auditReader").style.display="block";
+
+
+
+  const cameras = await Html5Qrcode.getCameras();
+
+
+  if(!cameras.length){
+
+    alert("No camera detected");
+
+    auditScanning=false;
+
+    btn.innerHTML="🔄 RE-INVENTORY";
+
+    return;
+
+  }
+
+
+
+  let cameraId = cameras[0].id;
+
+
+
+  for(let cam of cameras){
+
+    let label=(cam.label || "").toLowerCase();
+
+
+    if(label.includes("back") || label.includes("rear")){
+
+      cameraId=cam.id;
+      break;
+
+    }
+
+  }
+
+
+
+  auditScanner = new Html5Qrcode("auditReader");
+
+
+
+  try {
+
+
+    await auditScanner.start(
+
+      {
+        deviceId:{
+          exact:cameraId
+        }
+      },
+
+
+      {
+
+        fps:20,
+
+        qrbox:{
+          width:300,
+          height:300
+        },
+
+        aspectRatio:1,
+
+
+        videoConstraints:{
+
+          facingMode:"environment",
+
+          width:{
+            ideal:1920
+          },
+
+          height:{
+            ideal:1080
+          }
+
+        }
+
+      },
+
+
+      async(decodedText)=>{
+
+
+        if(!auditScanning) return;
+
+
+        if(auditBusy) return;
+
+
+        auditBusy=true;
+
+
+        beep();
+        vibrate();
+
+
+
+        try{
+
+
+          const res = await fetch(
+
+            API_URL +
+
+            "?action=checkAudit" +
+
+            "&barcode=" +
+            encodeURIComponent(decodedText) +
+
+            getSessionParams()
+
+          );
+
+
+          const data = await res.json();
+
+
+
+          if(data.status==="FOUND"){
+
+
+            await saveAudit(decodedText);
+
+
+          }
+
+
+          else if(data.status==="ALREADY_AUDITED"){
+
+
+            document.getElementById("result").innerHTML=`
+
+            <div class="card red">
+
+            🛑 ALREADY AUDITED
+
+            <br><br>
+
+            ${decodedText}
+
+            </div>
+
+            `;
+
+
+          }
+
+
+          else {
+
+
+            document.getElementById("result").innerHTML=`
+
+            <div class="no-results">
+
+            ❌ ITEM NOT FOUND
+
+            <br><br>
+
+            ${decodedText}
+
+            </div>
+
+            `;
+
+
+          }
+
+
+
+        }
+
+        finally{
+
+
+          setTimeout(()=>{
+
+            auditBusy=false;
+
+          },500);
+
+
+        }
+
+
+      }
+
+    );
+
+
+
+    // CAMERA AUTO FOCUS + ZOOM
+
+    try{
+
+
+      const video=document.querySelector("#auditReader video");
+
+
+      if(video && video.srcObject){
+
+
+        const track =
+        video.srcObject.getVideoTracks()[0];
+
+
+        if(track){
+
+
+          const capabilities =
+          track.getCapabilities();
+
+
+
+          if(
+            capabilities.focusMode &&
+            capabilities.focusMode.includes("continuous")
+          ){
+
+
+            await track.applyConstraints({
+
+              advanced:[
+                {
+                  focusMode:"continuous"
+                }
+              ]
+
+            });
+
+
+          }
+
+
+
+          if(capabilities.zoom){
+
+
+            await track.applyConstraints({
+
+              advanced:[
+                {
+                  zoom:2
+                }
+              ]
+
+            });
+
+
+          }
+
+
+        }
+
+      }
+
+
+    }
+
+    catch(e){
+
+      console.log(
+        "Audit camera enhancement:",
+        e
+      );
+
+    }
+
+
+
+  }
+
+  catch(e){
+
+
+    console.log(
+      "AUDIT CAMERA ERROR:",
+      e
+    );
+
+
+    alert(
+      "Cannot start audit camera:\n"+e
+    );
+
+
+    auditScanning=false;
+
+    btn.innerHTML="🔄 RE-INVENTORY";
+
+
+    document.getElementById("auditReader").style.display="none";
+
+
+  }
+
+
+}
+  
+  
+
+  
+
+
+  async function saveAudit(barcode){
+
+const res = await fetch(
+API_URL+
+"?action=saveAudit"+
+"&barcode="+encodeURIComponent(barcode)+
+getSessionParams()
+);
+
+
+const data = await res.json();
+
+
+if(data.status==="RECORDED"){
+
+
+auditCount++;
+
+
+document.getElementById("auditCounter").innerHTML =
+"Scanned : " + auditCount;
+
+
+
+document.getElementById("result").innerHTML=`
+<div class="card green scan-animate">
+
+✅ AUDIT RECORDED
+
+<br><br>
+
+<b>${data.colO}</b><br>
+
+${data.colJ}
+
+<br><br>
+
+${barcode}
+
+</div>
+
+`;
+
+}
+
+else{
+
+alert(data.status);
+
+}
+
+}
+
+
+  
 async function saveYes() {
 
   console.log("========== saveYes() ==========");
@@ -1402,22 +2116,68 @@ function cancelNo() {
 
 async function refreshPage() {
 
-  // Stop camera if still running
-  if(scanner){
-    try{
-      await scanner.stop();
-      await scanner.clear();
-    }
-    catch(e){
-      console.log(e);
-    }
+ // STOP NORMAL CAMERA
+if(scanner){
 
-    scanner = null;
-  }
+try{
+
+await scanner.stop();
+await scanner.clear();
+
+}catch(e){}
+
+scanner=null;
+
+}
+
+
+// STOP AUDIT CAMERA
+if(auditScanner){
+
+try{
+
+await auditScanner.stop();
+await auditScanner.clear();
+
+}catch(e){}
+
+auditScanner=null;
+
+}
+
+auditScanning=false;
+auditBusy=false;
+  auditCount=0;
+
+document.getElementById("auditCounter").innerHTML =
+"Scanned : 0";
 
   isScanning = false;
 
   setUIScanning(false);
+
+  // Stop audit scanner if running
+if(auditScanner){
+  try{
+    await auditScanner.stop();
+    await auditScanner.clear();
+  }
+  catch(e){
+    console.log(e);
+  }
+
+  auditScanner = null;
+}
+
+auditScanning = false;
+auditBusy = false;
+
+document.getElementById("auditReader").style.display = "none";
+document.getElementById("auditScanBtn").innerHTML = "🔄 RE-INVENTORY";
+
+  document.getElementById("scanBtn").disabled = false;
+document.getElementById("scanBtn").style.opacity = "1";
+document.getElementById("scanBtn").style.cursor = "pointer";
 
 
   // Clear inputs
@@ -1615,50 +2375,59 @@ document.addEventListener("click", initAudio, { once: true });
 async function logout() {
 
 
-  // STOP CAMERA FIRST
-  if(scanner){
-    try{
-      await scanner.stop();
-      await scanner.clear();
-    }
-    catch(e){
-      console.log("Camera stop error:", e);
-    }
-
-    scanner = null;
-  }
+const session =
+JSON.parse(
+localStorage.getItem("inventorySession_"+BRANCH)
+|| "{}"
+);
 
 
-  isScanning = false;
+const email=session.email || "";
+const sessionId=session.sessionId || "";
 
 
-  const email = localStorage.getItem("inventoryEmail");
-  const sessionId = localStorage.getItem("sessionId");
+// CLEAR LOCAL FIRST
 
 
-  try {
+localStorage.removeItem(
+"inventorySession_"+BRANCH
+);
 
-    await fetch(
-      API_URL +
-      "?action=logout" +
-      "&email=" + encodeURIComponent(email) +
-      "&sessionId=" + encodeURIComponent(sessionId)
-    );
-
-  } catch (e) {
-
-    console.log(e);
-
-  }
+localStorage.removeItem("loginTime");
 
 
-  localStorage.removeItem("inventoryLoggedIn");
-  localStorage.removeItem("inventoryEmail");
-  localStorage.removeItem("loginTime");
-  localStorage.removeItem("sessionId");
+// STOP CAMERA
+if(scanner){
+
+try{
+
+await scanner.stop();
+await scanner.clear();
+
+}catch(e){}
+
+scanner=null;
+
+}
 
 
-  location.reload();
+try{
+
+await fetch(
+API_URL+
+"?action=logout"+
+"&email="+encodeURIComponent(email)+
+"&sessionId="+encodeURIComponent(sessionId)
+);
+
+}catch(e){
+
+console.log(e);
+
+}
+
+
+location.reload();
 
 }
 
@@ -1675,10 +2444,18 @@ function checkLoginExpiry(){
   const maxTime = 13 * 60 * 60 * 1000; // 13 hours
   if(now - Number(loginTime) > maxTime){
 
-    localStorage.removeItem("inventoryLoggedIn");
-    localStorage.removeItem("inventoryEmail");
+    
+   Object.keys(localStorage).forEach(key=>{
+
+if(key.startsWith("inventorySession_")){
+
+localStorage.removeItem(key);
+
+}
+
+});
     localStorage.removeItem("loginTime");
-    localStorage.removeItem("sessionId");
+   
 
     alert("Session expired. Please login again.");
 
@@ -1697,18 +2474,24 @@ document.getElementById("otp").addEventListener("keydown",e=>{
 
 function checkGatewayAccess(){
 
-  const fromGateway = sessionStorage.getItem("fromGateway");
+const branch =
+sessionStorage.getItem("selectedBranch");
 
-  if(fromGateway === "YES"){
-    return true;
-  }
 
-  return false;
+if(branch === BRANCH){
+
+return true;
+
+}
+
+return false;
+
 }
   
 
 window.addEventListener("DOMContentLoaded", async function(){
 
+  
 
 if(!checkGatewayAccess()){
 
@@ -1750,8 +2533,15 @@ return;
 
 checkLoginExpiry();
 
-  const email = localStorage.getItem("inventoryEmail");
-  const sessionId = localStorage.getItem("sessionId");
+  const session =
+JSON.parse(
+localStorage.getItem("inventorySession_"+BRANCH)
+|| "{}"
+);
+
+
+const email = session.email || "";
+const sessionId = session.sessionId || "";
 
 
   // NO SAVED LOGIN
@@ -1788,10 +2578,18 @@ checkLoginExpiry();
     else {
 
       // ONLY REMOVE IF SERVER REALLY SAYS INVALID
-      localStorage.removeItem("inventoryLoggedIn");
-      localStorage.removeItem("inventoryEmail");
+      
+     Object.keys(localStorage).forEach(key=>{
+
+if(key.startsWith("inventorySession_")){
+
+localStorage.removeItem(key);
+
+}
+
+});
       localStorage.removeItem("loginTime");
-      localStorage.removeItem("sessionId");
+      
 
 
       document.getElementById("loginScreen").style.display="flex";
@@ -1900,10 +2698,14 @@ async function sendSelectedReport() {
 
     try {
 
-        const res = await fetch(
+const reportType =
+document.getElementById("reportType").value;
+
+const res = await fetch(
 
             API_URL +
             "?action=sendReport" +
+            "&type=" + encodeURIComponent(reportType) +
             "&emails=" + encodeURIComponent(emails) +
             getSessionParams()
 
@@ -1958,6 +2760,444 @@ async function sendSelectedReport() {
   `;
 
 }
+async function clearAuditSheet(){
+
+
+const confirmClear = confirm(
+"⚠ CLEAR AUDIT SHEET?\n\nAll audit records will be deleted."
+);
+
+
+if(!confirmClear){
+
+return;
+
+}
+
+
+
+const session =
+JSON.parse(
+localStorage.getItem("inventorySession_"+BRANCH)
+|| "{}"
+);
+
+
+
+document.getElementById("result").innerHTML = `
+
+<div class="card saving">
+
+<div class="spinner"></div>
+
+Clearing audit data...
+
+</div>
+
+`;
+
+
+
+const res = await fetch(
+
+API_URL+
+"?action=clearAudit"+
+"&email="+encodeURIComponent(session.email || "")+
+"&sessionId="+encodeURIComponent(session.sessionId || "")
+
+);
+
+
+
+const data = await res.json();
+
+
+
+if(data.status==="OK"){
+
+
+document.getElementById("result").innerHTML = `
+
+<div class="card green scan-animate">
+
+✅ AUDIT CLEARED
+
+<br><br>
+
+Deleted Rows:
+
+<b>${data.rows}</b>
+
+</div>
+
+`;
+
+
+}
+else{
+
+
+document.getElementById("result").innerHTML = `
+
+<div class="card red">
+
+❌ ${data.status}
+
+</div>
+
+`;
+
+
+}
+
+
+
+}
+  
+
+ async function uploadStockFile(file){
+
+    if(!file){
+        alert("❌ No file selected");
+        return;
+    }
+
+
+    if(!checkStockAccess()){
+
+        alert("❌ NO ACCESS");
+        return;
+
+    }
+
+
+    // Check file type
+    const allowed = [
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-excel"
+    ];
+
+    if(!allowed.includes(file.type)){
+
+        alert("❌ Please upload Excel file only");
+
+        return;
+
+    }
+
+
+    // Optional size check
+    if(file.size > 10 * 1024 * 1024){
+
+        alert(
+          "❌ File too large\n\nMaximum 10MB"
+        );
+
+        return;
+
+    }
+
+
+    const reader = new FileReader();
+
+
+    reader.onload = async function(e){
+
+        try {
+
+
+            // REMOVE DATA URL HEADER
+            const base64 =
+            e.target.result.split(",")[1];
+
+
+            const params =
+            new URLSearchParams();
+
+
+            params.append(
+                "action",
+                "uploadStock"
+            );
+
+
+            params.append(
+                "file",
+                base64
+            );
+
+
+            params.append(
+                "fileName",
+                file.name
+            );
+
+
+            const session =
+            JSON.parse(
+            localStorage.getItem(
+                "inventorySession_"+BRANCH
+            ) || "{}"
+            );
+
+
+            params.append(
+                "email",
+                session.email || ""
+            );
+
+
+            params.append(
+                "sessionId",
+                session.sessionId || ""
+            );
+
+
+            document.getElementById("result").innerHTML = `
+
+            <div class="card saving">
+
+            <div class="spinner"></div>
+
+            Uploading stock file...
+
+            </div>
+
+            `;
+
+
+
+            const res = await fetch(
+                API_URL,
+                {
+                    method:"POST",
+
+                    headers:{
+                        "Content-Type":
+                        "application/x-www-form-urlencoded;charset=UTF-8"
+                    },
+
+                    body:params.toString()
+
+                }
+            );
+
+
+
+         const text = await res.text();
+
+console.log("RAW SERVER RESPONSE:");
+console.log(text);
+
+let data;
+
+try{
+    data = JSON.parse(text);
+}catch(e){
+    document.getElementById("result").innerHTML = `
+        <div class="card red">
+            ❌ SERVER DID NOT RETURN JSON
+            <br><br>
+            <pre style="white-space:pre-wrap;font-size:12px;">${text}</pre>
+        </div>
+    `;
+    return;
+}
+
+console.log("UPLOAD RESPONSE:", data);
+
+
+
+           if(data.status === "OK"){
+
+
+    document.getElementById("result").innerHTML = `
+
+    <div class="card green scan-animate">
+
+    ✅ STOCK UPDATED
+
+    <br><br>
+
+    ITEMS:
+    <b>${data.rows}</b>
+
+    </div>
+
+    `;
+
+
+    // reset only the file input
+    document.getElementById("stockFile").value = "";
+
+
+}
+            else{
+
+
+                document.getElementById("result").innerHTML = `
+
+                <div class="card red">
+
+                ❌ UPLOAD FAILED
+
+                <br><br>
+
+                ${data.status}
+
+                </div>
+
+                `;
+
+
+            }
+
+
+
+        }
+        catch(err){
+
+
+            console.error(
+                "UPLOAD ERROR:",
+                err
+            );
+
+
+            document.getElementById("result").innerHTML = `
+
+            <div class="card red">
+
+            ❌ UPLOAD ERROR
+
+            <br><br>
+
+            ${err.message}
+
+            </div>
+
+            `;
+
+
+        }
+
+
+    };
+
+
+    reader.onerror = function(){
+
+        alert(
+          "❌ Cannot read file"
+        );
+
+    };
+
+
+    reader.readAsDataURL(file);
+
+
+}
+
+  function clearAudit(e){
+
+
+const email =
+(e.parameter.email || "")
+.trim()
+.toLowerCase();
+
+
+
+const ADMINS = [
+  "remnvill@gmail.com",
+  "fmfc_audit654@yahoo.com"
+];
+
+
+
+if(!ADMINS.includes(email)){
+
+
+return jsonResponse({
+
+status:"NO ACCESS"
+
+});
+
+
+}
+
+
+
+const ss =
+SpreadsheetApp.openById(SPREADSHEET_ID);
+
+
+
+const sheet =
+ss.getSheetByName("AUDIT");
+
+
+
+if(!sheet){
+
+
+return jsonResponse({
+
+status:"AUDIT SHEET NOT FOUND"
+
+});
+
+
+}
+
+
+
+const lastRow =
+sheet.getLastRow();
+
+
+
+let rowsDeleted = 0;
+
+
+
+if(lastRow > 1){
+
+
+rowsDeleted = lastRow - 1;
+
+
+
+sheet
+.getRange(
+2,     // row start
+1,     // column A
+rowsDeleted,
+22     // A to V = 22 columns
+)
+.clearContent();
+
+
+
+}
+
+
+
+return jsonResponse({
+
+status:"OK",
+rows:rowsDeleted
+
+});
+
+
+}
+
+  
+
+
 
   
 
