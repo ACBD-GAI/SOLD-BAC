@@ -718,8 +718,9 @@ VERIFY OTP
     overflow:hidden;
     ">
     </div>
-   <div id="auditCounter"
+ <div id="auditCounter"
 style="
+display:none;
 text-align:center;
 font-weight:bold;
 margin:10px;
@@ -1540,6 +1541,7 @@ async function toggleAuditScan() {
 
 
     document.getElementById("auditReader").style.display="none";
+    document.getElementById("auditCounter").style.display = "none";
 
 
     return;
@@ -1557,6 +1559,7 @@ async function toggleAuditScan() {
 
   document.getElementById("auditCounter").innerHTML =
   "Scanned : 0";
+  document.getElementById("auditCounter").style.display = "none";
 
 
   btn.innerHTML = "⏹ STOP AUDIT";
@@ -2123,6 +2126,7 @@ auditBusy=false;
 
 document.getElementById("auditCounter").innerHTML =
 "Scanned : 0";
+  document.getElementById("auditCounter").style.display = "none";
 
   isScanning = false;
 
