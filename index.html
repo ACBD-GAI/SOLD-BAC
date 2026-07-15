@@ -718,8 +718,9 @@ VERIFY OTP
     overflow:hidden;
     ">
     </div>
-   <div id="auditCounter"
+  <div id="auditCounter"
 style="
+display:none;
 text-align:center;
 font-weight:bold;
 margin:10px;
@@ -755,7 +756,10 @@ disabled>
 🔍 SEARCH SI
 </button>
 
-<button class="btn-orange" onclick="refreshPage()">
+<button
+id="refreshBtn"
+class="btn-orange"
+onclick="refreshPage()">
 ♻ REFRESH
 </button>
 
@@ -958,10 +962,10 @@ CANCEL
 
   
 <script>
-  let auditBusy = false;
+let auditBusy = false;
+let auditCount = 0;
 
-
-  const BRANCH="BAC";
+const BRANCH="BAC";
   let auditMode = false;
 let scanner = null;
 let isScanning = false;
@@ -1265,7 +1269,7 @@ function setUIScanning(state) {
   const btn = document.getElementById("scanBtn");
   const siBox = document.getElementById("siNo");
   const reader = document.getElementById("reader");
-  const refreshBtn = document.querySelector(".btn-orange");
+  const refreshBtn = document.getElementById("refreshBtn");
 
   if (state) {
     btn.innerHTML = "⛔ STOP SCANNING";
@@ -1555,8 +1559,10 @@ async function toggleAuditScan() {
 
   auditCount = 0;
 
-  document.getElementById("auditCounter").innerHTML =
-  "Scanned : 0";
+document.getElementById("auditCounter").style.display = "block";
+
+document.getElementById("auditCounter").innerHTML =
+"Scanned : 0";
 
 
   btn.innerHTML = "⏹ STOP AUDIT";
@@ -1865,6 +1871,7 @@ async function toggleAuditScan() {
 
 
     document.getElementById("auditReader").style.display="none";
+    document.getElementById("auditCounter").style.display = "none";
 
 
   }
@@ -1995,46 +2002,67 @@ if (saveBtn) {
     let colO = data.colO || row?.[14] || "";
 
 
+    if (data.status === "ERROR") {
+
     document.getElementById("result").innerHTML = `
-      <div class="card green scan-animate">
+    <div class="card red">
 
-        <div>✅ ${data.status}</div>
+    ❌ ERROR
 
-        <br>
+    <br><br>
 
-        <b style="font-size:16px;">
-          ${colO}
-        </b>
+    ${data.error}
 
-        <br>
+    <br><br>
 
-        ${colJ ? `<small style="color:#666;">${colJ}</small><br>` : ""}
+    🏷️ ${tempCode}
 
-        <div style="margin-top:12px;font-size:14px;">
-          🏷️ ${tempCode}
-        </div>
-
-      </div>
+    </div>
     `;
 
-    
+    isSaving = false;
+    return;
+}
 
-  } catch(err){
+// SUCCESS
+document.getElementById("result").innerHTML = `
+<div class="card green scan-animate">
+
+✅ ADDED TO SOLD
+
+<br><br>
+
+<b>${colO}</b><br>
+
+${colJ ? `<small>${colJ}</small><br>` : ""}
+
+🏷️ ${tempCode}
+
+</div>
+`;
+
+tempCode = "";
+tempSi = "";
+
+}
+catch(err){
 
     console.error(err);
 
     document.getElementById("result").innerHTML = `
-      <div class="card red">
-        ❌ SAVE ERROR<br><br>
+    <div class="card red">
+        ❌ SAVE FAILED
+        <br><br>
         ${err.message}
-      </div>
+    </div>
     `;
 
-  }
+}
+finally{
 
+    isSaving = false;
 
-  isSaving = false;
-
+}
 }
 
 async function searchSI() {
@@ -2120,6 +2148,8 @@ auditScanner=null;
 auditScanning=false;
 auditBusy=false;
   auditCount=0;
+
+document.getElementById("auditCounter").style.display = "none";
 
 document.getElementById("auditCounter").innerHTML =
 "Scanned : 0";
