@@ -718,9 +718,8 @@ VERIFY OTP
     overflow:hidden;
     ">
     </div>
- <div id="auditCounter"
+   <div id="auditCounter"
 style="
-display:none;
 text-align:center;
 font-weight:bold;
 margin:10px;
@@ -977,7 +976,7 @@ const STOCK_ADMIN = [
 ];
 
 
-const API_URL = "https://script.google.com/macros/s/AKfycbyJBvUxVdF8AtxXU-EbUlw8LCaqC3N9iX19IfD_K67OBJuiV86VNG7xpdwdZLrXNgja/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbw7qgagAN5mL1a9b3YtjOMbNvgRhzj0psTeZ3rEE5_cHPFGUZcWpiftIXVrbXjsk9Rr/exec";
 
 function getSessionParams(){
 
@@ -1541,7 +1540,6 @@ async function toggleAuditScan() {
 
 
     document.getElementById("auditReader").style.display="none";
-    document.getElementById("auditCounter").style.display = "none";
 
 
     return;
@@ -1559,7 +1557,6 @@ async function toggleAuditScan() {
 
   document.getElementById("auditCounter").innerHTML =
   "Scanned : 0";
-  document.getElementById("auditCounter").style.display = "none";
 
 
   btn.innerHTML = "⏹ STOP AUDIT";
@@ -1660,11 +1657,6 @@ async function toggleAuditScan() {
 
 
         if(!auditScanning) return;
-        if(decodedText === lastAuditBarcode){
-    return;
-}
-
-lastAuditBarcode = decodedText;
 
 
         if(auditBusy) return;
@@ -1708,17 +1700,47 @@ lastAuditBarcode = decodedText;
           }
 
 
-       else if(data.status==="ALREADY_AUDITED"){
-
-    // Ignore duplicate
-}
+          else if(data.status==="ALREADY_AUDITED"){
 
 
-else{
+            document.getElementById("result").innerHTML=`
 
-    // Ignore not found
+            <div class="card red">
 
-}
+            🛑 ALREADY AUDITED
+
+            <br><br>
+
+            ${decodedText}
+
+            </div>
+
+            `;
+
+
+          }
+
+
+          else {
+
+
+            document.getElementById("result").innerHTML=`
+
+            <div class="no-results">
+
+            ❌ ITEM NOT FOUND
+
+            <br><br>
+
+            ${decodedText}
+
+            </div>
+
+            `;
+
+
+          }
+
 
 
         }
@@ -1726,10 +1748,11 @@ else{
         finally{
 
 
-         setTimeout(()=>{
-    auditBusy = false;
-    lastAuditBarcode = "";
-},200);
+          setTimeout(()=>{
+
+            auditBusy=false;
+
+          },500);
 
 
         }
@@ -1873,12 +1896,29 @@ if(data.status==="RECORDED"){
 auditCount++;
 
 
-document.getElementById("auditCounter").textContent =
+document.getElementById("auditCounter").innerHTML =
 "Scanned : " + auditCount;
 
 
 
+document.getElementById("result").innerHTML=`
+<div class="card green scan-animate">
 
+✅ AUDIT RECORDED
+
+<br><br>
+
+<b>${data.colO}</b><br>
+
+${data.colJ}
+
+<br><br>
+
+${barcode}
+
+</div>
+
+`;
 
 }
 
@@ -2083,7 +2123,6 @@ auditBusy=false;
 
 document.getElementById("auditCounter").innerHTML =
 "Scanned : 0";
-  document.getElementById("auditCounter").style.display = "none";
 
   isScanning = false;
 
