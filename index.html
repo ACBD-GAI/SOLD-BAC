@@ -977,7 +977,7 @@ const STOCK_ADMIN = [
 ];
 
 
-const API_URL = "https://script.google.com/macros/s/AKfycby5wuweRkLHMK9ANQzsE8QREAoAXsC9so58Sjp7F2Y4mrljcO7xR6GD4G0IPq04XObG/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyJBvUxVdF8AtxXU-EbUlw8LCaqC3N9iX19IfD_K67OBJuiV86VNG7xpdwdZLrXNgja/exec";
 
 function getSessionParams(){
 
@@ -1629,7 +1629,7 @@ async function toggleAuditScan() {
 
       {
 
-        fps:30,
+        fps:20,
 
         qrbox:{
           width:300,
@@ -1699,12 +1699,10 @@ lastAuditBarcode = decodedText;
 
 
 
-         if (data.status === "FOUND") {
+          if(data.status==="FOUND"){
 
-    // Save in the background
-    saveAudit(decodedText);
 
-}
+            await saveAudit(decodedText);
 
 
           }
@@ -1725,15 +1723,16 @@ else{
 
         }
 
-     finally{
+        finally{
 
+
+         setTimeout(()=>{
     auditBusy = false;
+    lastAuditBarcode = "";
+},200);
 
-    setTimeout(()=>{
-        lastAuditBarcode = "";
-    },150);
 
-}
+        }
 
 
       }
@@ -1855,41 +1854,37 @@ else{
   
 
 
- async function saveAudit(barcode){
-
-try{
+  async function saveAudit(barcode){
 
 const res = await fetch(
-API_URL +
-"?action=saveAudit" +
-"&barcode=" + encodeURIComponent(barcode) +
+API_URL+
+"?action=saveAudit"+
+"&barcode="+encodeURIComponent(barcode)+
 getSessionParams()
 );
 
+
 const data = await res.json();
+
 
 if(data.status==="RECORDED"){
 
-    auditCount++;
 
-    document.getElementById("auditCounter").textContent =
-    "Scanned : " + auditCount;
+auditCount++;
+
+
+document.getElementById("auditCounter").textContent =
+"Scanned : " + auditCount;
+
+
+
+
 
 }
-else if(data.status==="ALREADY_AUDITED"){
 
-    console.log("Already audited");
-
-}
 else{
 
-    console.log(data.status);
-
-}
-
-}catch(err){
-
-    console.error(err);
+alert(data.status);
 
 }
 
