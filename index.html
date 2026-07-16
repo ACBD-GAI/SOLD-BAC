@@ -1520,46 +1520,50 @@ async function toggleAuditScan() {
 
 
 
+
   // ================= STOP AUDIT =================
 
-  if (auditScanning) {
+if (auditScanning) {
 
-    auditScanning = false;
+  // Warn if there are still queued items
+  if (auditQueue.length > 0 || auditProcessing) {
 
-    btn.innerHTML = "🔄 RE-INVENTORY";
+    const pending = auditQueue.length + (auditProcessing ? 1 : 0);
 
+    const quit = confirm(
+      "⚠ There are still " + pending + " queued item(s) waiting to be processed.\n\n" +
+      "If you stop now, those queued items will NOT be saved.\n\n" +
+      "Do you want to quit Re-Inventory?"
+    );
 
-    scanBtn.disabled = false;
-    scanBtn.style.opacity = "1";
-    scanBtn.style.cursor = "pointer";
-
-
-    if (auditScanner) {
-
-      try {
-
-        await auditScanner.stop();
-        await auditScanner.clear();
-
-      } catch(e){
-
-        console.log(e);
-
-      }
-
-
-      auditScanner = null;
-
+    if (!quit) {
+      return;
     }
-
-
-    document.getElementById("auditReader").style.display="none";
-
-
-    return;
-
   }
 
+  auditScanning = false;
+
+  btn.innerHTML = "🔄 RE-INVENTORY";
+
+  scanBtn.disabled = false;
+  scanBtn.style.opacity = "1";
+  scanBtn.style.cursor = "pointer";
+
+  if (auditScanner) {
+    try {
+      await auditScanner.stop();
+      await auditScanner.clear();
+    } catch (e) {
+      console.log(e);
+    }
+
+    auditScanner = null;
+  }
+
+  document.getElementById("auditReader").style.display = "none";
+
+  return;
+}
 
 
   // ================= START AUDIT =================
