@@ -959,6 +959,39 @@ CANCEL
 </div>
   
 </div>
+  <div id="quitAuditDialog" class="report-overlay">
+
+<div class="report-modal">
+
+<div class="report-title">
+⚠ Stop Re-Inventory?
+</div>
+
+<div
+id="quitAuditMessage"
+class="report-subtitle"
+style="
+line-height:1.6;
+font-size:15px;
+margin-top:15px;
+">
+</div>
+
+<button
+class="btn-orange"
+onclick="confirmQuitAudit()">
+🛑 STOP RE-INVENTORY
+</button>
+
+<button
+class="cancel-report-btn"
+onclick="cancelQuitAudit()">
+CONTINUE SCANNING
+</button>
+
+</div>
+
+</div>
 
 
   
@@ -1530,15 +1563,11 @@ if (auditScanning) {
 
     const pending = auditQueue.length + (auditProcessing ? 1 : 0);
 
-    const quit = confirm(
-      "⚠ There are still " + pending + " queued item(s) waiting to be processed.\n\n" +
-      "If you stop now, those queued items will NOT be saved.\n\n" +
-      "Do you want to quit Re-Inventory?"
-    );
+   const quit = await askQuitAudit(pending);
 
-    if (!quit) {
-      return;
-    }
+if (!quit) {
+    return;
+}
   }
 
   auditScanning = false;
@@ -3030,6 +3059,47 @@ console.log("UPLOAD RESPONSE:", data);
 
 
 }
+
+function askQuitAudit(pending){
+
+    document.getElementById("quitAuditMessage").innerHTML = `
+        ⚠ <b>${pending}</b> queued item(s) are still waiting to be processed.<br><br>
+
+        If you stop now, those items <b>will NOT be saved.</b><br><br>
+
+        Do you really want to stop Re-Inventory?
+    `;
+
+    document.getElementById("quitAuditDialog").style.display="flex";
+
+    return new Promise(resolve=>{
+        quitAuditResolve = resolve;
+    });
+
+}
+
+function confirmQuitAudit(){
+
+    document.getElementById("quitAuditDialog").style.display="none";
+
+    if(quitAuditResolve){
+        quitAuditResolve(true);
+        quitAuditResolve=null;
+    }
+
+}
+
+function cancelQuitAudit(){
+
+    document.getElementById("quitAuditDialog").style.display="none";
+
+    if(quitAuditResolve){
+        quitAuditResolve(false);
+        quitAuditResolve=null;
+    }
+
+}
+  
 
   
 
