@@ -963,7 +963,12 @@ CANCEL
   
 <script>
 let auditBusy = false;
-let auditCount = 0;
+
+// Audit statistics
+let auditRecorded = 0;
+let auditDuplicate = 0;
+let auditNotFound = 0;
+let auditErrors = 0;
 
 const BRANCH="BAC";
   let auditMode = false;
@@ -980,7 +985,7 @@ const STOCK_ADMIN = [
 ];
 
 
-const API_URL = "https://script.google.com/macros/s/AKfycbxINFXH2hlT2K_-u7AE3Dw32V6WVzi_Q_5556nSrL2oHavW-Ve93jath71XQaHk0W4/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxm1NhRnSPcFOQ7AI8qmEnE0QK9TmoA2CmiWw5516ye-0aJQK2lMvI1hj9jufg235Ui/exec";
 
 function getSessionParams(){
 
@@ -1557,12 +1562,18 @@ async function toggleAuditScan() {
 
   auditScanning = true;
 
-  auditCount = 0;
+  auditRecorded = 0;
+auditDuplicate = 0;
+auditNotFound = 0;
+auditErrors = 0;
 
 document.getElementById("auditCounter").style.display = "block";
-
-document.getElementById("auditCounter").innerHTML =
-"Scanned : 0";
+document.getElementById("auditCounter").innerHTML = `
+Recorded: 0<br>
+Already Audited: 0<br>
+Not Found: 0<br>
+Errors: 0
+`;
 
 
   btn.innerHTML = "⏹ STOP AUDIT";
@@ -1659,116 +1670,29 @@ document.getElementById("auditCounter").innerHTML =
       },
 
 
-      async(decodedText)=>{
+      (decodedText)=>{
 
+    if (!auditScanning) return;
 
-        if(!auditScanning) return;
+    // Prevent the same QR from firing repeatedly while it stays
+    if (decodedText === lastAuditBarcode) return;
 
+    lastAuditBarcode = decodedText;
 
-        if(auditBusy) return;
+    beep();
+    vibrate();
 
-
-        auditBusy=true;
-
-
-        beep();
-        vibrate();
-
-
-
-        try{
-
-
-          const res = await fetch(
-
-            API_URL +
-
-            "?action=checkAudit" +
-
-            "&barcode=" +
-            encodeURIComponent(decodedText) +
-
-            getSessionParams()
-
-          );
-
-
-          const data = await res.json();
-
-
-
-          if(data.status==="FOUND"){
-
-
-            await saveAudit(decodedText);
-
-
-          }
-
-
-          else if(data.status==="ALREADY_AUDITED"){
-
-
-            document.getElementById("result").innerHTML=`
-
-            <div class="card red">
-
-            🛑 ALREADY AUDITED
-
-            <br><br>
-
-            ${decodedText}
-
-            </div>
-
-            `;
-
-
-          }
-
-
-          else {
-
-
-            document.getElementById("result").innerHTML=`
-
-            <div class="no-results">
-
-            ❌ ITEM NOT FOUND
-
-            <br><br>
-
-            ${decodedText}
-
-            </div>
-
-            `;
-
-
-          }
-
-
-
+    // Allow the same code again after it leaves the camera
+    setTimeout(() => {
+        if (lastAuditBarcode === decodedText) {
+            lastAuditBarcode = "";
         }
+    }, 800);
 
-        finally{
+    // Process completely in the background
+    processAudit(decodedText);
 
-
-          setTimeout(()=>{
-
-            auditBusy=false;
-
-          },500);
-
-
-        }
-
-
-      }
-
-    );
-
-
+}
 
     // CAMERA AUTO FOCUS + ZOOM
 
@@ -1878,11 +1802,22 @@ document.getElementById("auditCounter").innerHTML =
 
 
 }
+
+  
   
   
 
   
+function updateAuditCounter(){
 
+    document.getElementById("auditCounter").innerHTML = `
+Recorded: ${auditRecorded}<br>
+Already Audited: ${auditDuplicate}<br>
+Not Found: ${auditNotFound}<br>
+Errors: ${auditErrors}
+`;
+
+}
 
   async function saveAudit(barcode){
 
@@ -2065,6 +2000,56 @@ finally{
 }
 }
 
+async function processAudit(barcode){
+
+    try{
+
+        const res = await fetch(
+            API_URL +
+            "?action=checkAudit" +
+            "&barcode=" + encodeURIComponent(barcode) +
+            getSessionParams()
+        );
+
+        const data = await res.json();
+
+        if(data.status === "FOUND"){
+
+            await saveAudit(barcode);
+
+        }
+        else if(data.status === "ALREADY_AUDITED"){
+
+            auditDuplicate++;
+            updateAuditCounter();
+
+        }
+        else if(data.status === "NOT_FOUND"){
+
+            auditNotFound++;
+            updateAuditCounter();
+
+        }
+        else{
+
+            auditErrors++;
+            updateAuditCounter();
+
+        }
+
+    }
+    catch(err){
+
+        console.log(err);
+
+        auditErrors++;
+        updateAuditCounter();
+
+    }
+
+}
+  
+
 async function searchSI() {
   clearUI();
 
@@ -2147,12 +2132,19 @@ auditScanner=null;
 
 auditScanning=false;
 auditBusy=false;
-  auditCount=0;
+auditRecorded = 0;
+auditDuplicate = 0;
+auditNotFound = 0;
+auditErrors = 0;
 
 document.getElementById("auditCounter").style.display = "none";
 
-document.getElementById("auditCounter").innerHTML =
-"Scanned : 0";
+document.getElementById("auditCounter").innerHTML = `
+Recorded: 0<br>
+Already Audited: 0<br>
+Not Found: 0<br>
+Errors: 0
+`;
 
   isScanning = false;
 
