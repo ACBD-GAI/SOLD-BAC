@@ -2892,6 +2892,20 @@ async function clearReport(sheet){
     if(!confirm(
         "Clear all records from " + displayName + "?\n\nThis cannot be undone."
     )) return;
+
+   if (sheet === "SCANRESULTS") {
+
+        const password = prompt(
+            "Enter administrator password to clear the Sold Out report:"
+        );
+
+        if (password === null) return;
+
+        if (password !== "12345") {
+            alert("❌ Incorrect password.");
+            return;
+        }
+    }
   
 
     closeClearDialog();
