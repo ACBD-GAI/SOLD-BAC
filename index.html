@@ -779,6 +779,14 @@ style="display:none;">
 📤 UPDATE STOCKS
 </button>
 
+     <button
+id="clearBtn"
+class="btn-orange"
+onclick="showClearDialog()"
+style="display:none;">
+🗑 CLEAR REPORT
+</button>
+
 <input
 type="file"
 id="stockFile"
@@ -993,6 +1001,43 @@ CONTINUE SCANNING
 
 </div>
 
+<div id="clearDialog" class="report-overlay">
+
+<div class="report-modal">
+
+<div class="report-title">
+🗑 CLEAR REPORT
+</div>
+
+<div class="report-subtitle">
+Choose what to clear
+</div>
+
+<button
+class="btn-orange"
+onclick="clearReport('SCANRESULTS')">
+🗑 CLEAR SOLD-OUT REPORT
+</button>
+
+<button
+class="btn-orange"
+onclick="clearReport('AUDIT')"
+style="margin-top:10px;">
+🗑 CLEAR AUDITED REPORT
+</button>
+
+<button
+class="cancel-report-btn"
+onclick="closeClearDialog()">
+CANCEL
+</button>
+
+</div>
+
+</div>
+
+  
+
 
   
 <script>
@@ -1023,7 +1068,7 @@ const STOCK_ADMIN = [
 ];
 
 
-const API_URL = "https://script.google.com/macros/s/AKfycbz_K0G3bqgTw5IuU6MZFJoRbbFsjVBs4WsfVFm_MW303l2f7BpNOT4yJWT5W924NGP6/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwOnBdWLWv6bNmq4Y-D3RTSZNjB2gUc11LwKtAlJvxvrUifd3P516rgiTEoyp7gSMZD/exec";
 
 function getSessionParams(){
 
@@ -1063,6 +1108,14 @@ function checkReportAccess(){
     reportBtn.style.display =
       REPORT_USERS.includes(email) ? "block" : "none";
   }
+
+const clearBtn = document.getElementById("clearBtn");
+
+if(clearBtn){
+    clearBtn.style.display =
+        REPORT_USERS.includes(email) ? "block" : "none";
+}
+  
 
   if(updateBtn){
     updateBtn.style.display =
@@ -2816,6 +2869,68 @@ const res = await fetch(
 
 }
 
+function showClearDialog(){
+    document.getElementById("clearDialog").style.display = "flex";
+}
+
+function closeClearDialog(){
+    document.getElementById("clearDialog").style.display = "none";
+}
+
+async function clearReport(sheet){
+
+    if(!confirm(
+        "Clear all records from " + sheet + "?\n\nThis cannot be undone."
+    )) return;
+
+    closeClearDialog();
+
+    document.getElementById("result").innerHTML = `
+    <div class="card saving">
+        <div class="spinner"></div>
+        Clearing report...
+    </div>`;
+
+    try{
+
+        const res = await fetch(
+            API_URL +
+            "?action=clearReport" +
+            "&sheet=" + encodeURIComponent(sheet) +
+            getSessionParams()
+        );
+
+        const data = await res.json();
+
+        if(data.status=="OK"){
+
+            document.getElementById("result").innerHTML = `
+            <div class="card green">
+                ✅ REPORT CLEARED
+            </div>`;
+
+        }else{
+
+            document.getElementById("result").innerHTML = `
+            <div class="card red">
+                ❌ ${data.status}
+            </div>`;
+
+        }
+
+    }catch(err){
+
+        document.getElementById("result").innerHTML = `
+        <div class="card red">
+            ❌ SERVER ERROR
+        </div>`;
+
+    }
+}
+
+
+
+  
  async function uploadStockFile(file){
 
     if(!file){
@@ -3098,6 +3213,54 @@ function cancelQuitAudit(){
         quitAuditResolve=null;
     }
 
+}
+
+
+  function clearReport(e){
+
+  const email = String(e.parameter.email || "")
+    .trim()
+    .toLowerCase();
+
+  const ADMINS = [
+    "remnvill@gmail.com",
+    "fmfc_audit654@yahoo.com"
+  ];
+
+  if (!ADMINS.includes(email)) {
+    return jsonResponse({
+      status: "NO ACCESS"
+    });
+  }
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName("SCANRESULTS");
+
+  if (!sheet) {
+    return jsonResponse({
+      status: "SHEET NOT FOUND"
+    });
+  }
+
+  const lastRow = sheet.getLastRow();
+
+  let deletedRows = 0;
+
+  if (lastRow > 1) {
+    deletedRows = lastRow - 1;
+
+    sheet.getRange(
+      2,
+      1,
+      deletedRows,
+      sheet.getLastColumn()
+    ).clearContent();
+  }
+
+  return jsonResponse({
+    status: "OK",
+    rows: deletedRows
+  });
 }
   
 
