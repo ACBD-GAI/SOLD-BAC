@@ -962,11 +962,13 @@ CANCEL
 
   
 <script>
+
+
 let auditBusy = false;
 let auditCount = 0;
 
 const BRANCH="BAC";
-  let auditMode = false;
+let auditMode = false;
 let scanner = null;
 let isScanning = false;
 let isSaving = false;
@@ -974,13 +976,20 @@ let isSaving = false;
 let lastAuditBarcode = "";
 let tempCode = "";
 let tempSi = "";
+
+/* ===== NEW FOR CONTINUOUS RE-INVENTORY ===== */
+let auditQueue = [];
+let auditProcessing = false;
+let auditRecent = new Map();
+/* =========================================== */
+
 const STOCK_ADMIN = [
   "remnvill@gmail.com",
   "fmfc_audit654@yahoo.com"
 ];
 
 
-const API_URL = "https://script.google.com/macros/s/AKfycbznU6K0Bj5j0kM39vq6YhGNZd1x3vATG5E2CStg8uIalvKpaQrnjQPlyYTCeUyrZRqF/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbx4LdAuV2sURSrKdFuMbPflhmnipwd94EmPDhROHLMPlwyQm7kxwW7RvhgXqcj65Un8/exec";
 
 function getSessionParams(){
 
@@ -1556,8 +1565,11 @@ async function toggleAuditScan() {
 
 
   auditScanning = true;
+ auditQueue.length = 0;
+auditProcessing = false;
+auditRecent.clear();
 
-  auditCount = 0;
+auditCount = 0;
 
 document.getElementById("auditCounter").style.display = "block";
 
@@ -1659,114 +1671,37 @@ document.getElementById("auditCounter").innerHTML =
       },
 
 
-      async(decodedText)=>{
+     async (decodedText) => {
 
+    if (!auditScanning) return;
 
-        if(!auditScanning) return;
+    const barcode = decodedText.trim().toUpperCase();
 
+    // Ignore same barcode within 2 seconds
+    const now = Date.now();
+    const last = auditRecent.get(barcode) || 0;
 
-        if(auditBusy) return;
+    if (now - last < 2000) return;
 
+    auditRecent.set(barcode, now);
 
-        auditBusy=true;
-
-
-        beep();
-        vibrate();
-
-
-
-        try{
-
-
-          const res = await fetch(
-
-            API_URL +
-
-            "?action=checkAudit" +
-
-            "&barcode=" +
-            encodeURIComponent(decodedText) +
-
-            getSessionParams()
-
-          );
-
-
-          const data = await res.json();
-
-
-
-          if(data.status==="FOUND"){
-
-
-            await saveAudit(decodedText);
-
-
-          }
-
-
-          else if(data.status==="ALREADY_AUDITED"){
-
-
-            document.getElementById("result").innerHTML=`
-
-            <div class="card red">
-
-            🛑 ALREADY AUDITED
-
-            <br><br>
-
-            ${decodedText}
-
-            </div>
-
-            `;
-
-
-          }
-
-
-          else {
-
-
-            document.getElementById("result").innerHTML=`
-
-            <div class="no-results">
-
-            ❌ ITEM NOT FOUND
-
-            <br><br>
-
-            ${decodedText}
-
-            </div>
-
-            `;
-
-
-          }
-
-
-
+    // Cleanup old entries
+    for (const [k, t] of auditRecent) {
+        if (now - t > 10000) {
+            auditRecent.delete(k);
         }
+    }
 
-        finally{
+    // Immediate feedback
+    beep();
+    vibrate();
 
-
-          setTimeout(()=>{
-
-            auditBusy=false;
-
-          },500);
-
-
-        }
-
-
-      }
-
-    );
+    // Don't queue the same barcode twice
+if (!auditQueue.includes(barcode)) {
+    auditQueue.push(barcode);
+    processAuditQueue();
+}
+}
 
 
 
@@ -1936,7 +1871,88 @@ alert(data.status);
 }
 
 }
+async function processAuditQueue(){
 
+    // Already processing?
+    if(auditProcessing) return;
+
+    auditProcessing = true;
+
+    while(auditQueue.length > 0 && auditScanning){
+
+        const barcode = auditQueue.shift();
+
+        try{
+
+            // Check item
+           const saveRes = await fetch(
+    API_URL +
+    "?action=saveAudit" +
+    "&barcode=" + encodeURIComponent(barcode) +
+    getSessionParams()
+);
+
+const saveData = await saveRes.json();
+
+if (saveData.status === "NOT_FOUND") {
+
+    document.getElementById("result").innerHTML = `
+    <div class="no-results">
+        ❌ ITEM NOT FOUND
+        <br><br>
+        ${barcode}
+    </div>`;
+
+    continue;
+}
+
+if (saveData.status === "ALREADY_AUDITED") {
+
+    document.getElementById("result").innerHTML = `
+    <div class="card red">
+        🛑 ALREADY AUDITED
+        <br><br>
+        ${barcode}
+    </div>`;
+
+    continue;
+}
+
+if (saveData.status === "RECORDED") {
+
+    auditCount++;
+
+    document.getElementById("auditCounter").innerHTML =
+        "Scanned : " + auditCount;
+
+    document.getElementById("result").innerHTML = `
+    <div class="card green scan-animate">
+        ✅ AUDIT RECORDED
+        <br><br>
+        <b>${saveData.colO}</b><br>
+        ${saveData.colJ || ""}
+        <br><br>
+        ${barcode}
+    </div>`;
+}
+
+        }catch(err){
+
+            console.log("Audit queue error:", err);
+
+            document.getElementById("result").innerHTML = `
+            <div class="card red">
+                ❌ NETWORK ERROR
+                <br><br>
+                ${barcode}
+            </div>`;
+        }
+    }
+
+    auditProcessing = false;
+}
+
+  
 
   
 async function saveYes() {
@@ -2146,7 +2162,7 @@ auditScanner=null;
 }
 
 auditScanning=false;
-auditBusy=false;
+
   auditCount=0;
 
 document.getElementById("auditCounter").style.display = "none";
