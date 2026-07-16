@@ -1068,7 +1068,7 @@ const STOCK_ADMIN = [
 ];
 
 
-const API_URL = "https://script.google.com/macros/s/AKfycbyjHmvOc8tvfZ4q4rMiICB_55J_NvZmZBA5yPRCIO9UeSDhBv19f1_GeQDLpc9O8L_E/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzLfgcuErnla2x_JkdNe0zkAr4iJGLr5RsrMaFGgTCXUWJ_EmQSfhnVRbrwSucSB658/exec";
 
 function getSessionParams(){
 
@@ -2879,9 +2879,15 @@ function closeClearDialog(){
 
 async function clearReport(sheet){
 
+    const displayName =
+        sheet === "SCANRESULTS" ? "Sold Out" :
+        sheet === "AUDIT" ? "Re-Inventory" :
+        sheet;
+
     if(!confirm(
-        "Clear all records from " + sheet + "?\n\nThis cannot be undone."
+        "Clear all records from " + displayName + "?\n\nThis cannot be undone."
     )) return;
+  
 
     closeClearDialog();
 
