@@ -1068,7 +1068,7 @@ const STOCK_ADMIN = [
 ];
 
 
-const API_URL = "https://script.google.com/macros/s/AKfycbwOnBdWLWv6bNmq4Y-D3RTSZNjB2gUc11LwKtAlJvxvrUifd3P516rgiTEoyp7gSMZD/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyjHmvOc8tvfZ4q4rMiICB_55J_NvZmZBA5yPRCIO9UeSDhBv19f1_GeQDLpc9O8L_E/exec";
 
 function getSessionParams(){
 
@@ -3216,52 +3216,7 @@ function cancelQuitAudit(){
 }
 
 
-  function clearReport(e){
-
-  const email = String(e.parameter.email || "")
-    .trim()
-    .toLowerCase();
-
-  const ADMINS = [
-    "remnvill@gmail.com",
-    "fmfc_audit654@yahoo.com"
-  ];
-
-  if (!ADMINS.includes(email)) {
-    return jsonResponse({
-      status: "NO ACCESS"
-    });
-  }
-
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName("SCANRESULTS");
-
-  if (!sheet) {
-    return jsonResponse({
-      status: "SHEET NOT FOUND"
-    });
-  }
-
-  const lastRow = sheet.getLastRow();
-
-  let deletedRows = 0;
-
-  if (lastRow > 1) {
-    deletedRows = lastRow - 1;
-
-    sheet.getRange(
-      2,
-      1,
-      deletedRows,
-      sheet.getLastColumn()
-    ).clearContent();
-  }
-
-  return jsonResponse({
-    status: "OK",
-    rows: deletedRows
-  });
-}
+  
   
 
   
