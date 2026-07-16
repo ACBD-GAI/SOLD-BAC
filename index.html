@@ -965,6 +965,10 @@ CANCEL
 let auditBusy = false;
 let auditCount = 0;
 
+let auditQueue = [];
+let auditSaving = false;
+let lastQueuedAudit = "";
+
 const BRANCH="BAC";
   let auditMode = false;
 let scanner = null;
@@ -1662,111 +1666,109 @@ document.getElementById("auditCounter").innerHTML =
       async(decodedText)=>{
 
 
-        if(!auditScanning) return;
+if(!auditScanning) return;
 
 
-        if(auditBusy) return;
+if(auditBusy) return;
 
 
-        auditBusy=true;
+auditBusy=true;
 
 
-        beep();
-        vibrate();
-
-
-
-        try{
-
-
-          const res = await fetch(
-
-            API_URL +
-
-            "?action=checkAudit" +
-
-            "&barcode=" +
-            encodeURIComponent(decodedText) +
-
-            getSessionParams()
-
-          );
-
-
-          const data = await res.json();
+beep();
+vibrate();
 
 
 
-          if(data.status==="FOUND"){
+try{
 
 
-            await saveAudit(decodedText);
+const res = await fetch(
+
+API_URL +
+
+"?action=checkAudit" +
+
+"&barcode=" +
+encodeURIComponent(decodedText) +
+
+getSessionParams()
+
+);
 
 
-          }
-
-
-          else if(data.status==="ALREADY_AUDITED"){
-
-
-            document.getElementById("result").innerHTML=`
-
-            <div class="card red">
-
-            🛑 ALREADY AUDITED
-
-            <br><br>
-
-            ${decodedText}
-
-            </div>
-
-            `;
-
-
-          }
-
-
-          else {
-
-
-            document.getElementById("result").innerHTML=`
-
-            <div class="no-results">
-
-            ❌ ITEM NOT FOUND
-
-            <br><br>
-
-            ${decodedText}
-
-            </div>
-
-            `;
-
-
-          }
+const data = await res.json();
 
 
 
-        }
-
-        finally{
+if(data.status==="FOUND"){
 
 
-          setTimeout(()=>{
-
-            auditBusy=false;
-
-          },500);
+await saveAudit(decodedText);
 
 
-        }
+}
 
 
-      }
+else if(data.status==="ALREADY_AUDITED"){
 
-    );
+
+document.getElementById("result").innerHTML=`
+
+<div class="card red">
+
+🛑 ALREADY AUDITED
+
+<br><br>
+
+${decodedText}
+
+</div>
+
+`;
+
+
+}
+
+
+else {
+
+
+document.getElementById("result").innerHTML=`
+
+<div class="no-results">
+
+❌ ITEM NOT FOUND
+
+<br><br>
+
+${decodedText}
+
+</div>
+
+`;
+
+
+}
+
+
+
+}
+
+finally{
+
+
+setTimeout(()=>{
+
+auditBusy=false;
+
+},500);
+
+
+}
+
+
+}
 
 
 
@@ -1875,6 +1877,92 @@ document.getElementById("auditCounter").innerHTML =
 
 
   }
+
+
+}
+
+
+  async function processAuditQueue(){
+
+if(auditSaving) return;
+
+if(auditQueue.length===0) return;
+
+
+auditSaving=true;
+
+
+let barcode = auditQueue.shift();
+
+
+try{
+
+
+const res = await fetch(
+
+API_URL+
+
+"?action=checkAudit"+
+
+"&barcode="+encodeURIComponent(barcode)+
+
+getSessionParams()
+
+);
+
+
+const data = await res.json();
+
+
+
+if(data.status==="FOUND"){
+
+
+await saveAudit(barcode);
+
+
+}
+
+else if(data.status==="ALREADY_AUDITED"){
+
+
+console.log("Already audited:",barcode);
+
+
+}
+
+else{
+
+
+console.log("Not found:",barcode);
+
+
+}
+
+
+
+}
+
+catch(e){
+
+console.log("QUEUE ERROR",e);
+
+
+// return failed scan back
+auditQueue.unshift(barcode);
+
+}
+
+
+auditSaving=false;
+
+
+// continue next item
+if(auditQueue.length>0){
+
+processAuditQueue();
+
+}
 
 
 }
