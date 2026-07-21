@@ -1068,7 +1068,7 @@ const STOCK_ADMIN = [
 ];
 
 
-const API_URL = "https://script.google.com/macros/s/AKfycbzLfgcuErnla2x_JkdNe0zkAr4iJGLr5RsrMaFGgTCXUWJ_EmQSfhnVRbrwSucSB658/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwPlFUp5ES_ZlsAeEUW4q62431YoROz4Dz3rwdO23STYOItCLmBnzCX0DJ_wSRI7ugP/exec";
 
 function getSessionParams(){
 
@@ -1477,7 +1477,8 @@ await scanner.start(
                     ✅ AVAILABLE<br><br>
                     <b>${colO}</b><br>
                     ${colJ ? `<small>${colJ}</small><br>` : ""}
-                    <b>${code}</b><br><br>
+                    <small>🏷 Tag: <b>${row[12] || ""}</b></small><br>
+                    
 
                     <button id="saveBtn"
                         class="btn-blue"
@@ -1498,6 +1499,7 @@ await scanner.start(
                     🛑 ALREADY SOLD<br><br>
                     <b>${colO}</b><br>
                     ${colJ ? `<small>${colJ}</small><br>` : ""}
+                    <small>🏷 Tag: <b>${row[12] || ""}</b></small><br>
                     <b>${code}</b>
                 </div>
             `;
@@ -1948,10 +1950,10 @@ document.getElementById("result").innerHTML=`
 <b>${data.colO}</b><br>
 
 ${data.colJ}
-
+<small>🏷 Tag: <b>${data.tag || ""}</b></small><br>
 <br><br>
 
-${barcode}
+
 
 </div>
 
@@ -1995,7 +1997,7 @@ if (saveData.status === "NOT_FOUND") {
     <div class="no-results">
         ❌ ITEM NOT FOUND
         <br><br>
-        ${barcode}
+        
     </div>`;
 
     continue;
@@ -2007,7 +2009,7 @@ if (saveData.status === "ALREADY_AUDITED") {
     <div class="card red">
         🛑 ALREADY AUDITED
         <br><br>
-        ${barcode}
+        <small>🏷 Tag: <b>${saveData.tag || barcode}</b></small><br>
     </div>`;
 
     continue;
@@ -2026,23 +2028,26 @@ if (saveData.status === "RECORDED") {
         <br><br>
         <b>${saveData.colO}</b><br>
         ${saveData.colJ || ""}
+        <small>🏷 Tag: <b>${saveData.tag || ""}</b></small><br>
         <br><br>
-        ${barcode}
+        
+    </div>`;
+}
+        }
+          
+        catch(err){
+
+    console.error("Audit queue error:", err);
+
+    document.getElementById("result").innerHTML = `
+    <div class="card red">
+        ❌ ERROR
+        <br><br>
+        <small>${err.message}</small>
     </div>`;
 }
 
-        }catch(err){
-
-            console.log("Audit queue error:", err);
-
-            document.getElementById("result").innerHTML = `
-            <div class="card red">
-                ❌ NETWORK ERROR
-                <br><br>
-                ${barcode}
-            </div>`;
-        }
-    }
+  }
 
     auditProcessing = false;
 }
@@ -2126,7 +2131,7 @@ if (saveBtn) {
 
     <br><br>
 
-    🏷️ ${tempCode}
+    
 
     </div>
     `;
@@ -2146,8 +2151,9 @@ document.getElementById("result").innerHTML = `
 <b>${colO}</b><br>
 
 ${colJ ? `<small>${colJ}</small><br>` : ""}
+<small>🏷 Tag: <b>${row[12] || ""}</b></small><br>
 
-🏷️ ${tempCode}
+
 
 </div>
 `;
@@ -2205,7 +2211,8 @@ async function searchSI() {
       #${idx + 1}<br>
       <b>${item.colO}</b><br>
       ${item.colJ ? `<small>${item.colJ}</small><br>` : ""}
-      ${item.barcode}
+      <small>🏷 Tag: <b>${item.tag}</b></small><br>
+      <small>📅 ${item.date || "No Date"}</small>
     </div>
   `).join("");
 }
